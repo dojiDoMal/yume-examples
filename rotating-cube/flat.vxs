@@ -1,0 +1,33 @@
+cbuffer Matrices : register(b0) {
+    float4x4 model; // não usado, mantido pra não quebrar o layout do UBO
+    float4x4 view;
+    float4x4 projection;
+};
+
+StructuredBuffer<float4x4> instanceModels : register(t0);
+
+struct VSInput {
+    float3 position : POSITION;
+    float3 normal : NORMAL;
+    uint instanceID : SV_InstanceID;
+};
+
+struct VSOutput {
+    float4 position : SV_Position;
+    float3 normal : TEXCOORD0;
+};
+
+VSOutput main(VSInput input) {
+    VSOutput output;
+
+    float4x4 instanceModel = instanceModels[input.instanceID];
+
+    float4 pos = float4(input.position, 1.0);
+    pos = mul(instanceModel, pos);
+    pos = mul(view, pos);
+    pos = mul(projection, pos);
+
+    output.position = pos;
+    output.normal = mul((float3x3)instanceModel, input.normal);
+    return output;
+}

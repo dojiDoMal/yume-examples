@@ -1,0 +1,20 @@
+cbuffer MaterialData : register(b1) {
+    float4 baseColor;
+};
+
+cbuffer LightData : register(b2) {
+    float3 lightDirection;
+};
+
+struct PSInput {
+    float4 position : SV_Position;
+    float3 normal : TEXCOORD0;
+};
+
+float4 main(PSInput input) : SV_Target {
+    float3 lightDir = normalize(lightDirection);
+    float3 normal = normalize(input.normal);
+    float diffuse = max(dot(normal, -lightDir), 0.4);
+    
+    return float4(baseColor.rgb * diffuse, baseColor.a);
+}
