@@ -35,6 +35,10 @@
             "fragmentShaderPath": "flat.pxs",
             "color": [89, 115, 153, 255]
           }
+        },
+        {
+          "type": "SCRIPT",
+          "path": "rotate.ys"
         }
       ]
     },

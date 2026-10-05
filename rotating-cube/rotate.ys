@@ -1,0 +1,11 @@
+# rotate.ys - gira o objeto 45 graus por segundo nos eixos X e Y.
+# Substitui a lógica que antes vivia no onUpdate() em C++ (src/main.cpp).
+
+let speed = 45
+
+function start:
+    log("rotate.ys carregado")
+
+function update dt:
+    transform.rotation.x += speed * dt
+    # transform.rotation.y += speed * dt
