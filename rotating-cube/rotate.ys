@@ -7,5 +7,5 @@ function start:
     log("rotate.ys carregado")
 
 function update dt:
-    transform.rotation.x += speed * dt
-    # transform.rotation.y += speed * dt
+    this.transform.rotation.x += speed * dt
+    this.transform.rotation.y += speed * dt
