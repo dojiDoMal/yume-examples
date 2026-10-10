@@ -54,6 +54,7 @@ if /i "%CONFIG%"=="Release" set CFG_LOWER=release
 if /i "%TARGET%"=="native" set BUILD_DIR=build\pc\%CFG_LOWER%
 if /i "%TARGET%"=="web"    set BUILD_DIR=build\web\%CFG_LOWER%
 if /i "%TARGET%"=="switch" set BUILD_DIR=build\switch\%CFG_LOWER%
+if /i "%TARGET%"=="3ds"    set BUILD_DIR=build\3ds\%CFG_LOWER%
 
 REM -------------------------
 REM Clean
@@ -119,7 +120,12 @@ REM Switch build
 REM -------------------------
 if /i "%TARGET%"=="switch" goto build_switch
 
-echo Target "%TARGET%" is not supported by this script yet ^(native, switch^).
+REM -------------------------
+REM 3DS build
+REM -------------------------
+if /i "%TARGET%"=="3ds" goto build_3ds
+
+echo Target "%TARGET%" is not supported by this script yet ^(native, switch, 3ds^).
 exit /b 1
 
 :build_switch
@@ -171,4 +177,40 @@ if errorlevel 1 (
     exit /b 1
 )
 echo Build completed. NRO in %BUILD_DIR%\main.nro
+goto :eof
+
+:build_3ds
+echo Building rotating-cube [3ds, %CONFIG%]...
+echo Engine: %YUME_ENGINE_DIR%
+
+REM The devkitARM 3DS toolchain (arm-none-eabi-gcc, picasso, 3dsxtool, ...) lives
+REM in the devkitPro MSYS2 environment, not in the Windows PATH, so the build
+REM runs inside a devkitPro bash login shell. DEVKITPRO_BIN points at that
+REM MSYS2's usr\bin (where bash.exe / cygpath.exe live).
+if not defined DEVKITPRO_BIN (
+    echo DEVKITPRO_BIN is not set. Point it at devkitPro's msys2\usr\bin ^(e.g. c:\devkitPro\msys2\usr\bin^).
+    exit /b 1
+)
+
+REM The devkitPro toolchain refuses to run unless driven by the CMake installed
+REM inside MSYS2, so invoke it by absolute path (same reasoning as the Switch).
+set "MSYS2_CMAKE_WIN=%DEVKITPRO_BIN%\cmake.exe"
+if not exist "%MSYS2_CMAKE_WIN%" (
+    echo MSYS2 cmake not found at "%MSYS2_CMAKE_WIN%". Install it with: pacman -S cmake
+    exit /b 1
+)
+
+REM Unlike the Switch, the 3DS needs NO host shader tools: picasso assembles the
+REM *.vxs.pica shaders. So we only pass the engine root, config and build dir.
+set "PROJECT_DIR_WIN=%CD%"
+set "YUME_ENGINE_DIR_WIN=%YUME_ENGINE_DIR%"
+set "BUILD_DIR_WIN=%CD%\%BUILD_DIR%"
+set "BUILD_CONFIG=%CONFIG%"
+
+"%DEVKITPRO_BIN%\bash.exe" -l "%CD%\build_3ds.sh"
+if errorlevel 1 (
+    echo Build failed!
+    exit /b 1
+)
+echo Build completed. 3DSX in %BUILD_DIR%\main.3dsx
 goto :eof
