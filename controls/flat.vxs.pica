@@ -1,0 +1,99 @@
+; =============================================================================
+; flat.vxs.pica - vertex shader PICA200 do rotating-cube (3DS / Yume engine).
+;
+; Assemblado pelo picasso (passo yume_compile_pica_shaders) em flat.vxs.shbin,
+; que o engine carrega de romfs:/flat.vxs.shbin. O nome casa com a cena:
+; scene.scn aponta "vertexShaderPath": "flat.vxs", e no 3DS getShaderExtension()
+; e ".shbin" -> arquivo flat.vxs.shbin.
+;
+; Contrato com Citro3DRendererBackend (precisa casar):
+;   entradas: v0 = posicao (vec3), v1 = normal (vec3)   [C3D_AttrInfo]
+;   uniforms: projection[4], modelView[4] (= view*model), matColor (RGBA),
+;             toLightView (vetor p/ luz em view space) -- enviados por frame
+;
+; O PICA200 nao tem fragment shader programavel; a cor final sai do TexEnv do
+; backend (GPU_PRIMARY_COLOR), que recebe o 'outclr' calculado aqui. A cor e a
+; iluminacao usam uniforms enviados pelo backend por frame: matColor (cor do
+; material, da cena) e toLightView (vetor para a luz em view space). O resultado
+; (N.L modulado pela cor, piso 0.4) casa com os demais backends (flat.pxs),
+; respeitada a limitacao de ser por-vertice (Gouraud) e nao por-pixel (Phong).
+; =============================================================================
+
+; --- Uniforms ----------------------------------------------------------------
+.fvec projection[4], modelView[4]
+; Cor base do material (RGBA 0..1), enviada pelo backend por C3D_FVUnifSet. A
+; iluminacao calculada abaixo e modulada por esta cor, para o cubo sair com a
+; cor definida na cena em vez de branco.
+.fvec matColor
+; Vetor "para a luz" em VIEW space, ja normalizado: o backend envia
+; -normalize(view_rot * light.direction). Fazendo o dot com a normal (tambem em
+; view space) obtem-se o MESMO N.L que o shader de referencia (flat.pxs) calcula
+; em world space, porque a view e ortonormal. .xyz = direcao, .w nao usado.
+.fvec toLightView
+
+; --- Constantes --------------------------------------------------------------
+.constf myconst(0.0, 1.0, -1.0, 0.4)
+.alias  zeros myconst.xxxx
+.alias  ones  myconst.yyyy
+; Piso difuso 0.4 -- MESMO valor do shader de referencia:
+;   diffuse = max(dot(N, -lightDir), 0.4)
+.alias  floor myconst.wwww
+
+; --- Saidas ------------------------------------------------------------------
+.out outpos position
+.out outclr color
+
+; --- Entradas ----------------------------------------------------------------
+.alias inpos v0
+.alias innrm v1
+
+.proc main
+	; r0 = (posicao, 1.0)
+	mov r0.xyz, inpos
+	mov r0.w,   ones
+
+	; r1 = modelView * posicao
+	dp4 r1.x, modelView[0], r0
+	dp4 r1.y, modelView[1], r0
+	dp4 r1.z, modelView[2], r0
+	dp4 r1.w, modelView[3], r0
+
+	; outpos = projection * r1
+	dp4 outpos.x, projection[0], r1
+	dp4 outpos.y, projection[1], r1
+	dp4 outpos.z, projection[2], r1
+	dp4 outpos.w, projection[3], r1
+
+	; --- Iluminacao simples por vertice --------------------------------------
+	; Normal -> view space (modelView), com w=0 (sem translacao).
+	mov r0.xyz, innrm
+	mov r0.w,   zeros
+	dp4 r2.x,   modelView[0], r0
+	dp4 r2.y,   modelView[1], r0
+	dp4 r2.z,   modelView[2], r0
+	mov r2.w,   zeros
+
+	; Normaliza r2.
+	dp3 r3,   r2, r2
+	rsq r3,   r3
+	mul r2,   r3, r2
+
+	; diffuse = max(N . toLightView, 0.4)
+	; Replica exatamente o shader de referencia (flat.pxs):
+	;   diffuse = max(dot(normal, -lightDir), 0.4)
+	; toLightView ja e -normalize(view_rot * lightDir), entao o dp3 aqui equivale
+	; ao dot com a normal em world space do referencia. O piso 0.4 (constante
+	; 'floor') substitui a antiga soma de ambiente, igualando a resposta de luz.
+	; No PICA200 um operando uniform so pode ocupar o slot src1, por isso
+	; 'toLightView' vem primeiro e o temp 'r2' depois.
+	dp3 r4.x, toLightView, r2
+	max r4.x, floor, r4.x
+
+	; cor final = cor do material * diffuse (escalar em r4.x, broadcast p/ RGB).
+	; Alpha mantem o do material.
+	mul r5.xyz, matColor, r4.xxxx
+	mov r5.w,   matColor.w
+	mov outclr, r5
+
+	end
+.end

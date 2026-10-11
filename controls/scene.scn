@@ -1,0 +1,76 @@
+{
+  "worldObjects": [
+    {
+      "comment": "index 0 - PLAYER: raiz, carrega o script de movimento. A camera (index 1) e filha dele.",
+      "transform": {
+        "position": [0.0, -2.0, 8.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "SCRIPT",
+          "path": "controls.ys"
+        }
+      ]
+    },
+    {
+      "comment": "index 1 - CAMERA: filha do player (parent 0). Transform local zerado = segue o player.",
+      "parent": 0,
+      "transform": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "CAMERA",
+          "background_color": [140, 82, 82, 255],
+          "fov": 60.0,
+          "view_rect": [800.0, 600.0],
+          "orthographic": false,
+          "orthoSize": 5.0
+        }
+      ]
+    },
+    {
+      "comment": "index 2 - CUBO",
+      "transform": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "MESH_RENDERER",
+          "mesh": {
+            "path": "cube.obj",
+            "shadeSmooth": true
+          },
+          "material": {
+            "vertexShaderPath": "flat.vxs",
+            "fragmentShaderPath": "flat.pxs",
+            "color": [89, 115, 153, 255]
+          }
+        }
+      ]
+    },
+    {
+      "comment": "index 3 - LUZ",
+      "transform": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "LIGHT",
+          "lightType": "DIRECTIONAL",
+          "direction": [0.5, -0.6, -1.0],
+          "color": [255, 255, 255, 255],
+          "intensity": 1.0
+        }
+      ]
+    }
+  ]
+}

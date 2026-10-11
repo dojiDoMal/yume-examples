@@ -1,0 +1,19 @@
+# controls.ys - move/gira o PLAYER (objeto raiz) conforme as setas.
+# A camera e filha do player (ver scene.scn), entao ela acompanha sozinha.
+#
+# Usamos os acessores LOCAIS (position.localZ / rotation.localX): movimento e
+# rotacao de um controller sao naturalmente no espaco do proprio objeto. Os
+# acessores globais (x/y/z == global) existem para LER a posicao de mundo; a
+# escrita de rotacao global ainda nao e suportada (ver engine).
+#
+# As acoes (moveUp/moveDown/moveLeft/moveRight) e seus eventType vem de
+# project.conf. Registramos uma vez no start; o engine entrega o dt.
+
+let speed = 10
+
+function start:
+    log("controls.ys carregado")
+    Yume.InputSystem.onAction('moveUp', (dt) => this.transform.position.localZ -= speed * dt)
+    Yume.InputSystem.onAction('moveDown', (dt) => this.transform.position.localZ += speed * dt)
+    Yume.InputSystem.onAction('moveRight', (dt) => this.transform.position.localX += speed * dt)
+    Yume.InputSystem.onAction('moveLeft', (dt) => this.transform.position.localX -= speed * dt)
