@@ -1,0 +1,38 @@
+// sprite.vxs - vertex shader do sprite 2D.
+//
+// O quad do sprite é desenhado pela engine (OpenGLRendererBackend::drawSprite)
+// com 2 atributos por vértice: posição (float3) e UV (float2). A engine
+// reescreve as UVs do quad por frame para recortar o frame atual do sprite
+// sheet, então aqui só repassamos a UV adiante.
+//
+// O cbuffer em register(b0) casa com o UBO de matrizes da engine (binding 0):
+// model (escrito por drawSprite), view e projection (escritos por bindCamera),
+// nessa ordem. O quarto Matrix4 do UBO (cameraPosition) não é usado aqui.
+cbuffer Matrices : register(b0) {
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+};
+
+struct VSInput {
+    float3 position : POSITION;
+    float2 uv : TEXCOORD0;
+};
+
+struct VSOutput {
+    float4 position : SV_Position;
+    float2 uv : TEXCOORD0;
+};
+
+VSOutput main(VSInput input) {
+    VSOutput output;
+
+    float4 pos = float4(input.position, 1.0);
+    pos = mul(model, pos);
+    pos = mul(view, pos);
+    pos = mul(projection, pos);
+
+    output.position = pos;
+    output.uv = input.uv;
+    return output;
+}

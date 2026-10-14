@@ -1,0 +1,77 @@
+# anim.ys - anima o personagem conforme as setas.
+#
+# O sprite sheet (character01-Sheet.ssm) tem 3 grupos de frames:
+#   back  (2 frames) - personagem de costas  -> seta para CIMA
+#   front (2 frames) - personagem de frente  -> seta para BAIXO
+#   side  (3 frames) - personagem de lado    -> seta para DIREITA
+#                                             -> seta para ESQUERDA (espelhado)
+#
+# Enquanto uma seta está pressionada, avançamos os frames num intervalo fixo
+# (frameTime), formando o ciclo de caminhada. Parado, mostramos o frame 0 do
+# último grupo (pose de idle virada para a direção atual).
+#
+# As ações (up/down/left/right) e o eventType vêm de project.conf. Aqui fazemos
+# polling com Yume.InputSystem.isPressed() dentro do update(dt).
+
+# Estado persistente entre frames (globais do script).
+let group = "front"   # grupo/direção atual
+let frame = 0         # índice do frame atual dentro do grupo
+let timer = 0         # acumulador de tempo para trocar de frame
+let frameTime = 0.15  # segundos por frame da animação
+
+function start:
+    log("pocket-creature: anim.ys carregado")
+    this.sprite.flipX = false
+    this.sprite.setFrame(group, 0)
+
+# Avança um frame no grupo atual, com wrap manual (sem operador de módulo).
+function advance:
+    timer = 0
+    frame += 1
+    let count = this.sprite.frameCount(group)
+    if frame >= count:
+        frame = 0
+    this.sprite.setFrame(group, frame)
+
+# Troca para um grupo novo reiniciando a animação no frame 0. flip espelha o
+# recorte (usado para a seta ESQUERDA, que reaproveita os frames de "side").
+# Parâmetros de função nomeada no YumeScript vêm sem parênteses.
+function face newGroup flip:
+    this.sprite.flipX = flip
+    if newGroup != group:
+        group = newGroup
+        frame = 0
+        timer = 0
+        this.sprite.setFrame(group, 0)
+
+function update dt:
+    # Qual direção está pressionada define o grupo. Prioridade: cima, baixo,
+    # direita, esquerda. Só uma por vez (YumeScript ainda não tem 'or'/'and').
+    let moving = false
+
+    if Yume.InputSystem.isPressed("up"):
+        face("back", false)
+        moving = true
+    else:
+        if Yume.InputSystem.isPressed("down"):
+            face("front", false)
+            moving = true
+        else:
+            if Yume.InputSystem.isPressed("right"):
+                face("side", false)
+                moving = true
+            else:
+                if Yume.InputSystem.isPressed("left"):
+                    face("side", true)
+                    moving = true
+
+    if moving:
+        # Anima enquanto a tecla estiver pressionada.
+        timer += dt
+        if timer >= frameTime:
+            advance()
+    else:
+        # Parado: pose de idle (frame 0) virada para a última direção.
+        frame = 0
+        timer = 0
+        this.sprite.setFrame(group, 0)

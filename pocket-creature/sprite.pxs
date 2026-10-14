@@ -1,0 +1,32 @@
+// sprite.pxs - pixel shader do sprite 2D.
+//
+// Amostra a textura do sprite no UV recortado pela engine e multiplica pela cor
+// base do material (tint). O par Texture2D+SamplerState precisa se chamar
+// exatamente spriteTexture/spriteSampler: o spirv-cross combina os dois no
+// uniform "SPIRV_Cross_CombinedspriteTexturespriteSampler", que é o nome que o
+// backend OpenGL (drawSprite) procura para ligar a textura à unidade 0.
+//
+// O sprite sheet tem fundo transparente; descartamos fragmentos quase
+// transparentes para o recorte não desenhar um retângulo opaco.
+Texture2D spriteTexture : register(t0);
+SamplerState spriteSampler : register(s0);
+
+cbuffer MaterialData : register(b1) {
+    float4 baseColor;
+};
+
+struct PSInput {
+    float4 position : SV_Position;
+    float2 uv : TEXCOORD0;
+};
+
+float4 main(PSInput input) : SV_Target {
+    float4 texel = spriteTexture.Sample(spriteSampler, input.uv);
+    float4 color = texel * baseColor;
+
+    if (color.a < 0.1) {
+        discard;
+    }
+
+    return color;
+}

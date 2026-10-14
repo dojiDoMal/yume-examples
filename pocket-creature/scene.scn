@@ -1,0 +1,50 @@
+{
+  "worldObjects": [
+    {
+      "comment": "index 0 - CÂMERA ortográfica olhando a origem (-Z). orthoSize = metade da altura visível em unidades de mundo; com scaleFactor 1.0 cada frame tem ~17 u de altura, então 15 deixa o personagem bem visível.",
+      "transform": {
+        "position": [0.0, 0.0, 10.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "CAMERA",
+          "background_color": [40, 44, 52, 255],
+          "fov": 60.0,
+          "view_rect": [800.0, 600.0],
+          "orthographic": true,
+          "orthoSize": 15.0
+        }
+      ]
+    },
+    {
+      "comment": "index 1 - PERSONAGEM: sprite recortado do sprite sheet (character01-Sheet.png) com os frames descritos em character01-Sheet.ssm. O script anim.ys troca o frame/grupo conforme as setas.",
+      "transform": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "SPRITE_RENDERER",
+          "texture": {
+            "path": "character01-Sheet.png",
+            "ssmPath": "character01-Sheet.ssm",
+            "scaleFactor": 1.0,
+            "filterType": "NEAREST"
+          },
+          "material": {
+            "vertexShaderPath": "sprite.vxs",
+            "fragmentShaderPath": "sprite.pxs",
+            "color": [255, 255, 255, 255]
+          }
+        },
+        {
+          "type": "SCRIPT",
+          "path": "anim.ys"
+        }
+      ]
+    }
+  ]
+}
