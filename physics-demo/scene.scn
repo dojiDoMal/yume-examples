@@ -1,0 +1,141 @@
+{
+  "worldObjects": [
+    {
+      "transform": {
+        "position": [8.0, 1.5, 15.0],
+        "rotation": [-18.0, 30.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "CAMERA",
+          "background_color": [30, 34, 45, 255],
+          "fov": 60.0,
+          "view_rect": [800.0, 600.0],
+          "orthographic": false,
+          "orthoSize": 5.0
+        }
+      ]
+    },
+    {
+      "transform": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "LIGHT",
+          "lightType": "DIRECTIONAL",
+          "direction": [0.4, -0.8, -0.5],
+          "color": [255, 255, 255, 255],
+          "intensity": 1.0
+        }
+      ]
+    },
+
+    {
+      "_comment": "Chão: um cubo achatado como piso. cube.obj vai de -1 a +1 em cada eixo (meia-extensão 1.0), então com scale Y=0.2 a meia-altura real é 0.2 e o topo fica em y=0.2. O PlaneCollider define a superfície de colisão (plano infinito, normal para cima, passando pelo topo em y=0.2).",
+      "transform": {
+        "position": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [10.0, 0.2, 10.0]
+      },
+      "components": [
+        {
+          "type": "MESH_RENDERER",
+          "mesh": {
+            "path": "cube.obj",
+            "shadeSmooth": false
+          },
+          "material": {
+            "vertexShaderPath": "flat.vxs",
+            "fragmentShaderPath": "flat.pxs",
+            "color": [70, 90, 70, 255]
+          }
+        },
+        {
+          "_comment": "Topo do piso em y=0.2 (meia-altura da malha escalada). O cubo (meia-extensão 1.0) repousa com o centro em 0.2 + 1.0 = 1.2.",
+          "type": "PLANE_COLLIDER",
+          "normal": [0.0, 1.0, 0.0],
+          "offset": 0.2
+        }
+      ]
+    },
+
+    {
+      "_comment": "Cubo: cai bem inclinado (rotação em X e Z) para pousar sobre uma QUINA. Com colliders OBB (orientados) + SAT, o contato é detectado na quina real, gera torque correto e o cubo TOMBA e assenta de forma crível, em vez de girar como bola. Inclinação agora pode ser agressiva.",
+      "transform": {
+        "position": [-2.5, 7.0, 0.0],
+        "rotation": [35.0, 0.0, 40.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "MESH_RENDERER",
+          "mesh": {
+            "path": "cube.obj",
+            "shadeSmooth": false
+          },
+          "material": {
+            "vertexShaderPath": "flat.vxs",
+            "fragmentShaderPath": "flat.pxs",
+            "color": [153, 115, 89, 255]
+          }
+        },
+        {
+          "type": "RIGIDBODY",
+          "mass": 0.7,
+          "gravityScale": 1.2,
+          "restitution": 0.2,
+          "friction": 0.6,
+          "useGravity": true
+        },
+        {
+          "_comment": "cube.obj vai de -1 a +1 em cada eixo: meias-extensões 1.0 (não 0.5). O collider precisa casar com a malha, senão a parte de baixo do cubo atravessa o piso.",
+          "type": "BOX_COLLIDER",
+          "halfExtents": [1.0, 1.0, 1.0],
+          "center": [0.0, 0.0, 0.0]
+        }
+      ]
+    },
+
+    {
+      "_comment": "Esfera: cai e, com velocidade horizontal inicial, o atrito no contato com o piso converte o deslizamento em ROLAMENTO (ω = v/r). Por isso ela entra com velocity em +X: ao tocar o chão, rola para a direita, longe do cubo (deslocada em Z para não colidir com ele e manter a demo legível). radius 1.0 casa com sphere.obj.",
+      "transform": {
+        "position": [-1.0, 6.0, 3.0],
+        "rotation": [0.0, 0.0, 0.0],
+        "scale": [1.0, 1.0, 1.0]
+      },
+      "components": [
+        {
+          "type": "MESH_RENDERER",
+          "mesh": {
+            "path": "sphere.obj",
+            "shadeSmooth": true
+          },
+          "material": {
+            "vertexShaderPath": "flat.vxs",
+            "fragmentShaderPath": "flat.pxs",
+            "color": [90, 120, 160, 255]
+          }
+        },
+        {
+          "type": "RIGIDBODY",
+          "mass": 1.0,
+          "gravityScale": 1.0,
+          "restitution": 0.3,
+          "friction": 0.6,
+          "velocity": [2.0, 0.0, 0.0],
+          "useGravity": true
+        },
+        {
+          "_comment": "sphere.obj tem raio 1 (vértices na esfera unitária). O collider precisa casar com a malha.",
+          "type": "SPHERE_COLLIDER",
+          "radius": 1.0,
+          "center": [0.0, 0.0, 0.0]
+        }
+      ]
+    }
+  ]
+}
